@@ -8,6 +8,8 @@ function App() {
   const [to, setTo] = useState("inr")
   const [convertedAmount, setConvertedAmount] = useState(0);
 
+  const imageUrl='https://images.pexels.com/photos/6801649/pexels-photo-6801649.jpeg?auto=compress&cs=tinysrgb&w=400';
+
   const currencyInfo = useCurrencyInfo(from);
   const curObj=currencyInfo[from];
 
@@ -40,10 +42,10 @@ function App() {
   return (
     <>
       <div
-        className="w-full h-screen flex flex-wrap justify-center items-center bg-cover bg-no-repeat"
-        style={{ backgroundImage: `url('https://images.pexels.com/photos/6801649/pexels-photo-6801649.jpeg?auto=compress&cs=tinysrgb&w=400')` }}
+        className="w-full h-screen flex flex-wrap justify-center items-center bg-cover bg-no-repeat bg-[url(../public/financial-data-analysis-visualization-0pqovc33kgq960fy.jpg)]"
       >
         <div className="w-full">
+          
           <div className="w-full max-w-md mx-auto border border-gray-60 rounded-lg p-5 backdrop-blur-sm bg-white/30">
             <form
               onSubmit={(e) => { 
@@ -88,7 +90,6 @@ function App() {
               >Convert {from.toUpperCase()} to {to.toUpperCase()}</button>
             </form>
           </div>
-
         </div>
       </div>
     </>
