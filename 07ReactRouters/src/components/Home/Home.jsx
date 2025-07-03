@@ -33,15 +33,15 @@ export default function Home() {
                 </div>
 
                 <div className="absolute inset-0 w-full sm:my-20 sm:pt-1 pt-12 h-full ">
-                    <img className="w-96" src="https://i.ibb.co/5BCcDYB/Remote2.png" alt="image1" />
+                    <img className="w-96" src="https://static.vecteezy.com/system/resources/previews/024/805/224/non_2x/office-worker-sitting-at-desk-bw-concept-spot-illustration-office-woman-at-workplace-2d-cartoon-flat-line-monochromatic-character-for-web-ui-design-editable-isolated-outline-hero-image-vector.jpg" alt="image1" />
                 </div>
             </aside>
 
             <div className="grid  place-items-center sm:mt-20">
-                <img className="sm:w-96 w-48" src="https://i.ibb.co/2M7rtLk/Remote1.png" alt="image2" />
+                <img className="sm:w-96 w-48" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSYqFkD7YF3Jstx8uAXFi2T6Xwwmb5aUOFqyrpDuy_AH_DZkKs4VQJH4VMkm_qsFWtTQoA&usqp=CAU" alt="image2" />
             </div>
 
-            <h1 className="text-center text-2xl sm:text-5xl py-10 font-medium">Lorem Ipsum Yojo</h1>
+            <h1 className="text-center text-2xl sm:text-5xl py-10 font-medium">Lorem, ipsum dolor.</h1>
         </div>
     );
 }
