@@ -1,11 +1,32 @@
-import { useState } from 'react'
+import { use, useEffect, useState } from 'react'
+import { useDispatch } from 'react-redux';
+import { Header, Footer } from './components';
+import authService from './appwrite/auth';
+import { login,logout } from './store/authAlice';
+
 
 function App() {
-  console.log(import.meta.url.VITE_APPWRITE_URL)
+  const [loading, setloading]= useState(true);
 
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    authService.getCurrentUser()
+      .then((userData) => {
+        if(userData) {
+          dispatch(login({userData}));
+        }else{
+          dispatch(logout());
+        }
+      })
+      .finally(() => {
+        setloading(false);
+      })
+  },[]);
+    
   return (
     <>
-      <h1>A blog app</h1>
+      <h1 className='text-3xl font-bold underline'>A blog app</h1>
     </>
   )
 }
