@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { Button, Input, Select, RTE } from '../index'
-import { useNavigate, userNavigate } from "react-router-dom"
-import { userSelector } from "react-redux"
+import { Button, Input, RTE } from '../index'
+import { useNavigate } from "react-router-dom"
+import { useSelector } from "react-redux"
 import appwriteService from '../../appwrite/config'
+import Select from '../Select'
 
 function PostForm({ post }) {
     const { register, handleSubmit, watch, setValue, control, getValues } =
@@ -17,11 +18,16 @@ function PostForm({ post }) {
         });
 
     const navigate = useNavigate();
-    const userData = userSelector(state => state.user.userData)
+    const userData = useSelector(state => state.auth.user)
 
     const submit = async (data) => {
+        if (!userData && !post) {
+            console.error('User not authenticated');
+            return;
+        }
+        
         if (post) {
-            const file = data.image[0] ? appwriteService.uploadFile(data.image[0]) : null
+            const file = data.image[0] ? await appwriteService.uploadFile(data.image[0]) : null
 
             if (file) {
                 appwriteService.deleteFile(post.featuredImage)
@@ -34,38 +40,36 @@ function PostForm({ post }) {
                 navigate(`/post/${dbPost.$id}`)
             }
         } else {
-            const file = data.image[0] ? appwriteService.uploadFile(data.image[0]) : null
+            const file = data.image[0] ? await appwriteService.uploadFile(data.image[0]) : null
             if (file) {
                 const fileId = file.$id
                 data.featuredImage = fileId
-                const dbPost = await appwriteService.createPost({ ...data, userId: userData.$id })
-                if (dbPost) {
-                    navigate(`/post/${dbPost.$id}`)
-                }
+            } else {
+                // No image uploaded, use placeholder
+                data.featuredImage = 'placeholder'
+            }
+            console.log("📤 Sending post data:", { ...data, userId: userData?.$id });
+            const dbPost = await appwriteService.createPost({ ...data, userId: userData?.$id })
+            if (dbPost) {
+                navigate(`/post/${dbPost.$id}`)
             }
         }
     }
 
     const slugTransform = useCallback((value) => {
-        if (value && typeof value === 'string')
-            return value.trim().toLowerCase().replace(/^[a-zA-Z\d]+/g, '-')
-                .replace(/\s/g, '-')
+        if (value && typeof value === 'string') {
+            const slug = value
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-zA-Z\d\s]+/g, '') // Remove special characters
+                .replace(/\s+/g, '-') // Replace one or more spaces with single hyphen
+                .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+            return slug
+        }
         return ''
     }, [])
 
-    useEffect(() => {
-        const subscription = watch((value, { name }) => {
-            if (name == 'title') {
-                setValue('slug', slugTransform(value.title, 
-                    { shouldValidate: true }
-                ))
-            }
-        })
-
-        return () => {
-            subscription.unsubscribe()
-        }
-    }, [watch, slugTransform, setValue])
+    // Removed useEffect watch to prevent conflicts with onInput handler
     return (
         <form onSubmit={handleSubmit(submit)} className="flex flex-wrap">
             <div className="w-2/3 px-2">
@@ -74,10 +78,14 @@ function PostForm({ post }) {
                     placeholder="Title"
                     className="mb-4"
                     {...register("title", { required: true })}
+                    onInput={(e) => {
+                        const transformedSlug = slugTransform(e.currentTarget.value)
+                        setValue("slug", transformedSlug, { shouldValidate: true })
+                    }}
                 />
                 <Input
-                    label="Slug :"
-                    placeholder="Slug"
+                    label="Slug (Auto-generated) :"
+                    placeholder="Slug will be generated from title"
                     className="mb-4"
                     {...register("slug", { required: true })}
                     onInput={(e) => {
@@ -88,11 +96,11 @@ function PostForm({ post }) {
             </div>
             <div className="w-1/3 px-2">
                 <Input
-                    label="Featured Image :"
+                    label="Featured Image (Optional) :"
                     type="file"
                     className="mb-4"
                     accept="image/png, image/jpg, image/jpeg, image/gif"
-                    {...register("image", { required: !post })}
+                    {...register("image", { required: false })}
                 />
                 {post && (
                     <div className="w-full mb-4">

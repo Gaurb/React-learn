@@ -37,38 +37,61 @@ export class AppwriteService {
 
     async createPost({title,slug,content,featuredImage,status,userId}){
         try {
-            await this.database.createDocument(
+            console.log("🔄 Creating post with data:", {title, slug, content: content?.substring(0, 50) + "...", featuredImage, status, userId});
+            
+            const response = await this.database.createDocument(
                 conf.appwriteDatabaseId,
                 conf.appwriteCollectionId,
                 slug,
                 {
-                    title,
-                    content,
-                    featuredImage,
-                    status,
-                    userId
+                    Title: title,
+                    content: content,
+                    featuredImage: featuredImage,
+                    status: status,
+                    userId: userId
                 }
             );
+            
+            console.log("✅ Post created successfully:", response);
+            return response;
         } catch (error) {
-            console.error("Error creating post:", error);
+            console.error("❌ Error creating post:", error);
+            console.error("Error details:", {
+                message: error.message,
+                type: error.type,
+                code: error.code
+            });
+            
+            if (error.message.includes("authorized")) {
+                console.error("🔒 PERMISSION ERROR: Check your Appwrite collection permissions!");
+                console.error("📋 You need to set permissions for:");
+                console.error("   - Create documents (users)");
+                console.error("   - Read documents (users or any)");
+                console.error("   - Update documents (users)");
+                console.error("   - Delete documents (users)");
+            }
+            
+            throw error;
         }
     }
 
     async updatePost(slug,{title,content,featuredImage,status,userId}){
         try {
-            await this.database.updateDocument(
+            const response = await this.database.updateDocument(
                 conf.appwriteDatabaseId,
                 conf.appwriteCollectionId,
                 slug,
                 {
-                    title,
-                    content,
-                    featuredImage,
-                    status
+                    Title: title,
+                    content: content,
+                    featuredImage: featuredImage,
+                    status: status
                 }
             );
+            return response;
         } catch (error) {
             console.error("Error updating post:", error);
+            throw error;
         }
     }
 
@@ -99,7 +122,7 @@ export class AppwriteService {
         }
     }
 
-    async getPosts(queries=[Query.equal("index","active")]){
+    async getPosts(queries=[Query.equal("status","active")]){
         try {
             const documents=await this.database.listDocuments(
                 conf.appwriteDatabaseId,
@@ -115,14 +138,33 @@ export class AppwriteService {
 
     async uploadFile(file) {
         try {
+            console.log("🔄 Uploading file:", file.name, file.size + " bytes");
+            
             const response = await this.storage.createFile(
                 conf.appwriteBucketId,
                 ID.unique(),
                 file
             );
+            
+            console.log("✅ File uploaded successfully:", response);
             return response;
         } catch (error) {
-            console.error("Error uploading file:", error);
+            console.error("❌ Error uploading file:", error);
+            console.error("Error details:", {
+                message: error.message,
+                type: error.type,
+                code: error.code
+            });
+            
+            if (error.message.includes("authorized")) {
+                console.error("🔒 PERMISSION ERROR: Check your Appwrite storage permissions!");
+                console.error("📋 You need to set permissions for:");
+                console.error("   - Create files (users)");
+                console.error("   - Read files (users or any)");
+                console.error("   - Update files (users)");
+                console.error("   - Delete files (users)");
+            }
+            
             throw error;
         }
     }
@@ -139,11 +181,27 @@ export class AppwriteService {
 
     getFilePreview(fileId){
         try {
-            return this.storage.getFilePreview(
-                conf.appwriteBucketId,fileId);
+            // Use getFileView instead of getFilePreview to avoid transformation limitations
+            console.log("📸 Loading image with file ID:", fileId);
+            return this.storage.getFileView(conf.appwriteBucketId, fileId);
         } catch (error) {
-            console.log("Error getting file preview:", error);
-            
+            console.log("❌ Error getting file view:", error);
+            if (error.message && error.message.includes("transformations")) {
+                console.log("💡 TIP: You're on a free Appwrite plan. Image transformations are limited.");
+                console.log("🔧 SOLUTION: Upgrade your plan or upload smaller images.");
+            }
+            // Return a placeholder URL if file viewing fails
+            return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5JbWFnZSBOb3QgQXZhaWxhYmxlPC90ZXh0Pjwvc3ZnPg==';
+        }
+    }
+
+    // Alternative method to get file download URL (works on free plan)
+    getFileDownloadUrl(fileId) {
+        try {
+            return this.storage.getFileDownload(conf.appwriteBucketId, fileId);
+        } catch (error) {
+            console.log("Error getting file download URL:", error);
+            return null;
         }
     }
 }
