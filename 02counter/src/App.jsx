@@ -9,16 +9,15 @@ function App() {
       alert("value cannot be greater than 20");
       setcounter(20);
     }
-    else{
-      setcounter(counter + 1);
+    else {
+      setcounter(prev => prev +1);
     }
   }
   var removeValue = () => {
     if (counter <= 0) {
       alert("value cannot be smaller than 0");
       setcounter(0);
-    }
-    else {
+    } else {
       setcounter(counter - 1);
     }
   }
